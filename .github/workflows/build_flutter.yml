@@ -1,0 +1,48 @@
+'''
+# Nama alur kerja yang akan ditampilkan di tab Actions GitHub
+name: Build Flutter App
+
+# Pemicu: Alur kerja ini akan berjalan setiap kali ada push ke branch 'main'
+on:
+  push:
+    branches:
+      - main
+
+# Pekerjaan: Kumpulan tugas yang akan dijalankan
+jobs:
+  # Nama pekerjaan, bisa apa saja
+  build-android:
+    # Menentukan bahwa pekerjaan ini akan berjalan di mesin virtual Ubuntu terbaru
+    runs-on: ubuntu-latest
+
+    # Langkah-langkah yang akan dieksekusi secara berurutan
+    steps:
+      # Langkah 1: Mengambil kode dari repositori Anda
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Langkah 2: Menyiapkan lingkungan Flutter menggunakan action populer
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # Menentukan versi Flutter yang akan digunakan
+          flutter-version: '3.19.0' # Ganti dengan versi Flutter Anda jika perlu
+          channel: 'stable'
+
+      # Langkah 3: Menginstal semua dependensi proyek
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Langkah 4: Membangun aplikasi Flutter untuk Android dalam mode rilis
+      - name: Build Android App (APK)
+        run: flutter build apk --release
+
+      # Langkah 5: Mengunggah file APK yang telah dibangun sebagai artefak
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          # Nama artefak yang akan muncul di halaman ringkasan alur kerja
+          name: release-apk
+          # Path ke file atau direktori yang akan diunggah
+          path: build/app/outputs/flutter-apk/app-release.apk
+'''
