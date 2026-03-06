@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -17,7 +16,7 @@ class MQTTService with ChangeNotifier {
 
   // Topik untuk subscribe dan publish
   // Ganti dengan topik yang sesuai dengan perangkat IoT Anda
-  final String _topic = 'flutter/test'; 
+  final String _topic = 'flutter/test';
 
   Future<void> connect() async {
     client = MqttServerClient(_broker, '');
@@ -47,21 +46,25 @@ class MQTTService with ChangeNotifier {
       developer.log('CONTOH: Terhubung ke broker MQTT');
       // Berlangganan topik setelah terhubung
       client.subscribe(_topic, MqttQos.atMostOnce);
-      
+
       // Mendengarkan pembaruan dari broker
       client.updates!.listen((List<MqttReceivedMessage<MqttMessage?>>? c) {
         final recMess = c![0].payload as MqttPublishMessage;
-        final pt =
-            MqttPublishPayload.bytesToStringAsString(recMess.payload.message);
+        final pt = MqttPublishPayload.bytesToStringAsString(
+          recMess.payload.message,
+        );
 
         // Simpan data yang diterima dan beri tahu listener
         data.value = pt;
         notifyListeners();
-        developer.log('DITERIMA: Pesan diterima dari topik: <${c[0].topic}>, pesan: <$pt>');
+        developer.log(
+          'DITERIMA: Pesan diterima dari topik: <${c[0].topic}>, pesan: <$pt>',
+        );
       });
     } else {
       developer.log(
-          'ERROR: Koneksi ke broker gagal - status: ${client.connectionStatus}');
+        'ERROR: Koneksi ke broker gagal - status: ${client.connectionStatus}',
+      );
       disconnect();
     }
   }
@@ -76,7 +79,7 @@ class MQTTService with ChangeNotifier {
       developer.log('ERROR: Tidak dapat publish, klien tidak terhubung.');
     }
   }
-  
+
   void onSubscribed(String topic) {
     developer.log('BERLANGGANAN: Berhasil berlangganan ke topik: $topic');
   }

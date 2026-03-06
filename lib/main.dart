@@ -1,15 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:mqtt_client/mqtt_client.dart'; // Impor yang ditambahkan
-import 'mqtt_service.dart';
 
 void main() {
   runApp(
     ChangeNotifierProvider(
-      create: (context) => MQTTService(),
+      create: (context) => ThemeProvider(),
       child: const MyApp(),
     ),
   );
+}
+
+class ThemeProvider with ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme() {
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
+        : ThemeMode.light;
+    notifyListeners();
+  }
+
+  void setSystemTheme() {
+    _themeMode = ThemeMode.system;
+    notifyListeners();
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -17,144 +34,128 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter MQTT Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    const Color primarySeedColor = Colors.deepPurple;
+
+    final TextTheme appTextTheme = TextTheme(
+      displayLarge: GoogleFonts.oswald(
+        fontSize: 57,
+        fontWeight: FontWeight.bold,
       ),
-      home: const MyHomePage(),
+      titleLarge: GoogleFonts.roboto(fontSize: 22, fontWeight: FontWeight.w500),
+      bodyMedium: GoogleFonts.openSans(fontSize: 14),
+    );
+
+    final ThemeData lightTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.light,
+      ),
+      textTheme: appTextTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: primarySeedColor,
+        foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.oswald(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: primarySeedColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+
+    final ThemeData darkTheme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primarySeedColor,
+        brightness: Brightness.dark,
+      ),
+      textTheme: appTextTheme,
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        titleTextStyle: GoogleFonts.oswald(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.black,
+          backgroundColor: primarySeedColor.shade200,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: GoogleFonts.roboto(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Flutter Material AI App',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const MyHomePage(),
+        );
+      },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  late MQTTService mqttService;
-  final TextEditingController _messageController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    // Mengakses MQTTService dari Provider
-    mqttService = Provider.of<MQTTService>(context, listen: false);
-    // Memulai koneksi ke broker
-    mqttService.connect();
-  }
-
-  @override
-  void dispose() {
-    // Memutuskan koneksi saat widget dihancurkan
-    mqttService.disconnect();
-    _messageController.dispose();
-    super.dispose();
-  }
-
-  void _sendMessage() {
-    if (_messageController.text.isNotEmpty) {
-      mqttService.publish(_messageController.text);
-      _messageController.clear();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter MQTT IoT Demo'),
+        title: const Text('Material AI Demo'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.themeMode == ThemeMode.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () => themeProvider.toggleTheme(),
+            tooltip: 'Toggle Theme',
+          ),
+          IconButton(
+            icon: const Icon(Icons.auto_mode),
+            onPressed: () => themeProvider.setSystemTheme(),
+            tooltip: 'Set System Theme',
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Menampilkan status koneksi
-            Consumer<MQTTService>(
-              builder: (context, service, child) {
-                final connectionState = service.client.connectionStatus?.state ?? MqttConnectionState.disconnected;
-                String statusText;
-                Color statusColor;
-
-                switch (connectionState) {
-                  case MqttConnectionState.connected:
-                    statusText = 'Terhubung';
-                    statusColor = Colors.green;
-                    break;
-                  case MqttConnectionState.connecting:
-                    statusText = 'Menghubungkan...';
-                    statusColor = Colors.orange;
-                    break;
-                  default:
-                    statusText = 'Terputus';
-                    statusColor = Colors.red;
-                }
-
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Status Broker: ', style: Theme.of(context).textTheme.titleLarge),
-                    Text(
-                      statusText,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(color: statusColor, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                );
-              },
-            ),
+            Text('Welcome!', style: Theme.of(context).textTheme.displayLarge),
             const SizedBox(height: 20),
-            const Divider(),
-            const SizedBox(height: 20),
-            
-            // Menampilkan data yang diterima
             Text(
-              'Data Diterima:',
-              style: Theme.of(context).textTheme.headlineSmall,
+              'This text uses a custom font.',
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
-            const SizedBox(height: 10),
-            Card(
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  // ValueListenableBuilder akan otomatis rebuild saat data berubah
-                  child: ValueListenableBuilder<String>(
-                    valueListenable: context.watch<MQTTService>().data,
-                    builder: (context, value, child) {
-                     return Text(
-                        value.isEmpty ? "Menunggu data..." : value,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-            const Spacer(),
-            
-            // Input untuk mengirim pesan
-            TextField(
-              controller: _messageController,
-              decoration: const InputDecoration(
-                labelText: 'Kirim Pesan ke Perangkat IoT',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.send),
-              ),
-              onSubmitted: (_) => _sendMessage(),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _sendMessage,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Kirim Perintah'),
-            ),
+            const SizedBox(height: 30),
+            ElevatedButton(onPressed: () {}, child: const Text('Press Me')),
           ],
         ),
       ),
