@@ -1,4 +1,3 @@
-'''
 # Nama alur kerja yang akan ditampilkan di tab Actions GitHub
 name: Build Flutter App
 
@@ -45,4 +44,3 @@ jobs:
           name: release-apk
           # Path ke file atau direktori yang akan diunggah
           path: build/app/outputs/flutter-apk/app-release.apk
-'''
