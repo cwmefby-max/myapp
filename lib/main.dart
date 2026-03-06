@@ -126,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: ValueListenableBuilder<String>(
                     valueListenable: context.watch<MQTTService>().data,
                     builder: (context, value, child) {
-                      return Text(
+                     return Text(
                         value.isEmpty ? "Menunggu data..." : value,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                       );
