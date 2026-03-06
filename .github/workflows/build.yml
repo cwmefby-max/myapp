@@ -7,10 +7,13 @@ on:
   push:
     branches:
       - main  # Jalankan hanya ketika ada push ke branch 'main'
+  pull_request:
+    branches:
+      - main
 
 # Daftar pekerjaan (jobs) yang akan dieksekusi
 jobs:
-  build-apk:
+  build:
     # Menentukan sistem operasi tempat pekerjaan ini akan berjalan
     runs-on: ubuntu-latest
 
@@ -21,13 +24,13 @@ jobs:
         uses: actions/checkout@v4
 
       # 2. Menyiapkan environment Java (diperlukan untuk build Android)
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
 
-      # 3. Menyiapkan environment Flutter
+      # 3. Menyiapkan environment Flutter menggunakan action yang benar
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -37,9 +40,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # 5. Membersihkan proyek (opsional tapi direkomendasikan)
-      - name: Clean project
-        run: flutter clean
+      # 5. Menganalisis kode sumber untuk error (opsional)
+      - name: Analyze project source
+        run: flutter analyze
 
       # 6. Membangun file APK untuk rilis
       - name: Build APK
@@ -51,4 +54,3 @@ jobs:
         with:
           name: app-release-apk # Nama artifact yang akan muncul
           path: build/app/outputs/flutter-apk/app-release.apk # Path ke file APK
-
