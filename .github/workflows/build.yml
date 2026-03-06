@@ -1,0 +1,54 @@
+
+# Nama alur kerja (workflow) yang akan muncul di tab Actions di GitHub
+name: Build Flutter APK
+
+# Menentukan kapan alur kerja ini akan dijalankan
+on:
+  push:
+    branches:
+      - main  # Jalankan hanya ketika ada push ke branch 'main'
+
+# Daftar pekerjaan (jobs) yang akan dieksekusi
+jobs:
+  build-apk:
+    # Menentukan sistem operasi tempat pekerjaan ini akan berjalan
+    runs-on: ubuntu-latest
+
+    # Langkah-langkah yang akan dieksekusi dalam pekerjaan ini
+    steps:
+      # 1. Mengunduh (checkout) kode dari repositori Anda
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Menyiapkan environment Java (diperlukan untuk build Android)
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+
+      # 3. Menyiapkan environment Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable' # Anda bisa ganti ke 'beta' atau 'dev' jika perlu
+
+      # 4. Mengunduh semua dependensi proyek Flutter
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 5. Membersihkan proyek (opsional tapi direkomendasikan)
+      - name: Clean project
+        run: flutter clean
+
+      # 6. Membangun file APK untuk rilis
+      - name: Build APK
+        run: flutter build apk --release
+
+      # 7. Mengunggah file APK yang telah dibangun sebagai artifact
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk # Nama artifact yang akan muncul
+          path: build/app/outputs/flutter-apk/app-release.apk # Path ke file APK
+
