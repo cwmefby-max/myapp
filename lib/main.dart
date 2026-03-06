@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color primarySeedColor = Colors.deepPurple;
+    const MaterialColor primarySeedColor = Colors.deepPurple;
 
     final TextTheme appTextTheme = TextTheme(
       displayLarge: GoogleFonts.oswald(
